@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Analisador de Criptoativos</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#172033;background:#f4f7fb}
+body{margin:0;padding:18px}.wrap{max-width:1000px;margin:auto}.hero{background:#102a43;color:white;padding:22px;border-radius:16px}
+h1{font-size:1.5rem;margin:0 0 8px}.muted{color:#62748a}.hero .muted{color:#d5e3f0}
+.panel{background:white;border:1px solid #d9e2ec;border-radius:14px;padding:16px;margin:14px 0}
+.row{display:flex;gap:10px;flex-wrap:wrap}.field{flex:1;min-width:150px}label{display:block;font-weight:650;margin-bottom:6px}
+input,select,button{font:inherit;padding:11px;border:1px solid #bcccdc;border-radius:9px;width:100%;box-sizing:border-box}
+button{background:#1261a0;color:white;border:0;font-weight:700;cursor:pointer}button:disabled{opacity:.6}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.card{border:1px solid #d9e2ec;border-radius:12px;padding:13px;background:#fff}.k{color:#62748a;font-size:.86rem}.v{font-size:1.25rem;font-weight:750;margin-top:5px;overflow-wrap:anywhere}
+.good{color:#137547}.bad{color:#b42318}.warn{color:#8a5b00}
+table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:9px;border-bottom:1px solid #e3eaf2;vertical-align:top}th{background:#f0f5fa}
+a{color:#075da8} .pill{display:inline-block;padding:4px 8px;border-radius:99px;background:#e8f2fb;margin:3px;font-size:.85rem}
+.small{font-size:.9rem}.notice{background:#fff8e1;border:1px solid #f4d06f;padding:12px;border-radius:10px}
+#error{color:#b42318;white-space:pre-wrap}.hidden{display:none}
+</style>
+</head>
+<body><div class="wrap">
+<div class="hero"><h1>Analisador de Criptoativos</h1><div class="muted">Protótipo ao vivo: dados públicos de mercado da Binance + indicadores técnicos + atalhos para verificação fundamental.</div></div>
+<div class="panel">
+<div class="row">
+<div class="field"><label for="asset">Ativo ou par</label><input id="asset" value="AVA" placeholder="Ex.: AVA, BTC, POL, AVAUSDT"></div>
+<div class="field"><label for="quote">Moeda de cotação</label><select id="quote"><option>USDT</option><option>BTC</option><option>FDUSD</option><option>USDC</option><option>BNB</option><option>EUR</option></select></div>
+<div class="field" style="align-self:end"><button id="go">Buscar e analisar</button></div>
+</div>
+<div class="small muted" style="margin-top:8px">Digite um ticker ou par listado na Binance Spot. Se houver mais de uma interpretação, confira o par identificado antes de usar os resultados.</div>
+<div id="status" class="small" aria-live="polite"></div><div id="error"></div>
+</div>
+<div id="results" class="hidden">
+<div class="panel"><h2 id="heading">Resultado</h2><div id="updated" class="muted small"></div><div id="metrics" class="cards" style="margin-top:12px"></div></div>
+<div class="panel"><h2>Indicadores técnicos</h2><div id="technical"></div></div>
+<div class="panel"><h2>Triagem de risco e potencial</h2><div id="score"></div><div class="notice small" style="margin-top:12px"><b>Limite:</b> esta pontuação usa dados de mercado observáveis e não consegue provar que um projeto é legítimo. Não é recomendação automática de compra. Confirme o ativo, contrato, liquidez e dados fundamentais em fontes independentes.</div></div>
+<div class="panel"><h2>Verificação em fontes especializadas</h2><p class="small">Abra estas fontes para confirmar capitalização, oferta, desbloqueios, auditorias, atividade on-chain, notícias e identidade do projeto. O protótipo não lê nem valida automaticamente o conteúdo dessas páginas.</p><div id="links"></div></div>
+<div class="panel"><h2>Dados brutos principais</h2><div id="raw"></div></div>
+</div>
+<div class="panel small muted"><b>Privacidade e segurança:</b> este arquivo consulta endpoints públicos de mercado. Não pede login, API key, senha, chave privada ou seed phrase e não executa ordens. A disponibilidade depende da conexão e das políticas da API.</div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const fmt=(n,d=4)=>Number.isFinite(n)?n.toLocaleString('pt-BR',{maximumFractionDigits:d}):'—';
+const pct=n=>Number.isFinite(n)?(n>0?'+':'')+n.toFixed(2)+'%':'—';
+const usd=n=>Number.isFinite(n)?'$'+n.toLocaleString('en-US',{maximumFractionDigits:8}):'—';
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function metric(label,value,sub=''){return `<div class="card"><div class="k">${label}</div><div class="v">${value}</div>${sub?`<div class="k">${sub}</div>`:''}</div>`}
+async function getJson(url){const r=await fetch(url);if(!r.ok)throw new Error(`API respondeu HTTP ${r.status} para ${url}`);return r.json()}
+function pctChange(a,b){return a?((b/a)-1)*100:NaN}
+function rsi(closes,period=14){if(closes.length<period+1)return NaN;let gain=0,loss=0;for(let i=closes.length-period;i<closes.length;i++){let d=closes[i]-closes[i-1];if(d>0)gain+=d;else loss-=d}if(loss===0)return 100;return 100-(100/(1+gain/loss))}
+function sma(arr,n){return arr.length>=n?arr.slice(-n).reduce((a,b)=>a+b,0)/n:NaN}
+function link(label,url){return `<a class="pill" href="${url}" target="_blank" rel="noopener">${label} ↗</a>`}
+async function analyze(){
+ $('error').textContent='';$('results').classList.add('hidden');$('go').disabled=true;
+ const raw=$('asset').value.trim().toUpperCase().replace(/\s/g,'');const quote=$('quote').value;
+ if(!raw){$('error').textContent='Digite um ticker ou par.';$('go').disabled=false;return}
+ $('status').textContent='Consultando dados públicos da Binance…';
+ try{
+  const base='https://data-api.binance.vision';
+  const ex=await getJson(base+'/api/v3/exchangeInfo');
+  let symbol=raw;
+  if(!raw.endsWith(quote) && !raw.includes('/')) symbol=raw+quote;
+  symbol=symbol.replace('/','');
+  let info=ex.symbols.find(s=>s.symbol===symbol && s.status==='TRADING');
+  if(!info && !raw.includes('/') && !raw.endsWith(quote)){
+    const matches=ex.symbols.filter(s=>s.baseAsset===raw && s.status==='TRADING');
+    if(matches.length===1){info=matches[0];symbol=info.symbol}
+    else if(matches.length>1){info=matches.find(s=>s.quoteAsset===quote)||matches[0];symbol=info.symbol}
+  }
+  if(!info)throw new Error(`Não encontrei o par ${symbol} negociável na Binance Spot. Confira o ticker e a moeda de cotação.`);
+  const [ticker,depth,klines]=await Promise.all([
+   getJson(base+'/api/v3/ticker/24hr?symbol='+encodeURIComponent(symbol)),
+   getJson(base+'/api/v3/depth?symbol='+encodeURIComponent(symbol)+'&limit=20'),
+   getJson(base+'/api/v3/klines?symbol='+encodeURIComponent(symbol)+'&interval=1d&limit=35')
+  ]);
+  const closes=klines.map(k=>Number(k[4])), vols=klines.map(k=>Number(k[5]));
+  const price=Number(ticker.lastPrice),change24=Number(ticker.priceChangePercent),high=Number(ticker.highPrice),low=Number(ticker.lowPrice);
+  const ch7=pctChange(closes[closes.length-8],closes[closes.length-1]);
+  const ch30=pctChange(closes[Math.max(0,closes.length-31)],closes[closes.length-1]);
+  const ma7=sma(closes,7),ma20=sma(closes,20),r=rsi(closes);
+  const avgVol=sma(vols.slice(0,-1),20),volRatio=avgVol?vols[vols.length-1]/avgVol:NaN;
+  const bid=Number(depth.bids?.[0]?.[0]),ask=Number(depth.asks?.[0]?.[0]);
+  const spread=(bid>0&&ask>0)?(ask-bid)/((ask+bid)/2)*100:NaN;
+  const quoteVol=Number(ticker.quoteVolume);
+  const lastDate=new Date(Number(klines[klines.length-1][0])).toLocaleString('pt-BR');
+  $('heading').textContent=`${info.baseAsset}/${info.quoteAsset} — ${info.baseAsset} (${info.status})`;
+  $('updated').textContent=`Dados consultados: ${new Date().toLocaleString('pt-BR')}. Último candle diário iniciado: ${lastDate}. Preços e volumes da Binance Spot.`;
+  $('metrics').innerHTML=[
+   metric('Preço atual',usd(price)),metric('Variação 24h',`<span class="${change24>=0?'good':'bad'}">${pct(change24)}</span>`),
+   metric('Máxima 24h',usd(high)),metric('Mínima 24h',usd(low)),
+   metric('Volume 24h',usd(quoteVol),`em ${info.quoteAsset}`),metric('Variação 7 dias',`<span class="${ch7>=0?'good':'bad'}">${pct(ch7)}</span>`),
+   metric('Variação ~30 dias',`<span class="${ch30>=0?'good':'bad'}">${pct(ch30)}</span>`),metric('Spread estimado',Number.isFinite(spread)?pct(spread):'—','melhor compra vs. venda')
+  ].join('');
+  const trend=price>ma7&&ma7>ma20?'Positiva no curto prazo':price<ma7&&ma7<ma20?'Negativa no curto prazo':'Mista / sem confirmação';
+  const rsiText=!Number.isFinite(r)?'Dados insuficientes':r>=70?'Zona de sobrecompra (não é sinal de venda isoladamente)':r<=30?'Zona de sobrevenda (não é sinal de compra isoladamente)':'Faixa intermediária';
+  $('technical').innerHTML=`<table><tbody>
+  <tr><th>Tendência (preço vs. médias)</th><td>${trend}</td></tr>
+  <tr><th>Média móvel 7 dias</th><td>${usd(ma7)}</td></tr><tr><th>Média móvel 20 dias</th><td>${usd(ma20)}</td></tr>
+  <tr><th>RSI 14 dias aproximado</th><td>${fmt(r,1)} — ${rsiText}</td></tr>
+  <tr><th>Volume diário vs. média de 20 candles</th><td>${Number.isFinite(volRatio)?fmt(volRatio,2)+'×':'—'}</td></tr>
+  <tr><th>Faixa 24h</th><td>${usd(low)} – ${usd(high)}</td></tr></tbody></table>
+  <p class="small muted">RSI simplificado para triagem; médias e variações usam candles diários retornados pela API. Não constituem previsão.</p>`;
+  let score=0,items=[];
+  const add=(name,pts,max,note)=>{score+=pts;items.push([name,pts,max,note])};
+  add('Tendência técnica',trend==='Positiva no curto prazo'?12:trend==='Mista / sem confirmação'?7:2,15,trend);
+  add('Desempenho recente',ch7>0&&ch30>0?10:(ch7>0||ch30>0)?6:2,10,`7d ${pct(ch7)}; ~30d ${pct(ch30)}`);
+  add('Liquidez observável',quoteVol>=10000000?13:quoteVol>=1000000?10:quoteVol>=100000?6:2,15,`Volume 24h ${usd(quoteVol)}`);
+  add('Spread',Number.isFinite(spread)?(spread<=0.15?10:spread<=0.5?7:spread<=1?4:1):0,10,Number.isFinite(spread)?pct(spread):'Sem dados');
+  add('Volatilidade diária',Math.abs(change24)<=5?8:Math.abs(change24)<=10?5:2,10,`Variação 24h ${pct(change24)}`);
+  const marketScore=score;
+  const rating=marketScore>=40?'Sinais de mercado relativamente favoráveis':marketScore>=28?'Sinais mistos; requer análise adicional':'Sinais de mercado frágeis ou risco elevado';
+  $('score').innerHTML=`<div class="cards">${metric('Indicador de mercado',`${marketScore}/60`)}${metric('Leitura preliminar',rating)}</div>
+  <p>Esta nota cobre apenas fatores observáveis no mercado da Binance. Os outros 40 pontos — legitimidade, utilidade, tokenomics e catalisadores — ficam <b>não avaliados</b> até confirmação em fontes independentes. Não converter a nota de mercado em nota total de investimento.</p>
+  <table><thead><tr><th>Critério</th><th>Pontos</th><th>Observação</th></tr></thead><tbody>${items.map(x=>`<tr><td>${x[0]}</td><td>${x[1]}/${x[2]}</td><td>${x[3]}</td></tr>`).join('')}</tbody></table>
+  <p class="small"><b>Sem recomendação automática:</b> a pontuação não prevê valorização nem substitui avaliação do projeto, oferta, desbloqueios ou riscos de fraude.</p>`;
+  const query=encodeURIComponent(info.baseAsset);
+  $('links').innerHTML=link('Pesquisar na CoinGecko','https://www.coingecko.com/en/search?query='+query)+
+   link('Pesquisar no CoinMarketCap','https://coinmarketcap.com/search/?q='+query)+
+   link('Pesquisar desbloqueios','https://www.google.com/search?q='+query+'+token+unlock+vesting')+
+   link('Pesquisar auditorias/segurança','https://www.google.com/search?q='+query+'+token+audit+security')+
+   link('Pesquisar documentação oficial','https://www.google.com/search?q='+query+'+official+docs+tokenomics');
+  $('raw').innerHTML=`<table><tbody><tr><th>Par</th><td>${esc(symbol)}</td></tr><tr><th>Ativo base</th><td>${esc(info.baseAsset)}</td></tr><tr><th>Ativo de cotação</th><td>${esc(info.quoteAsset)}</td></tr><tr><th>Status</th><td>${esc(info.status)}</td></tr><tr><th>Negociações 24h</th><td>${fmt(Number(ticker.count),0)}</td></tr><tr><th>Melhor bid / ask</th><td>${usd(bid)} / ${usd(ask)}</td></tr><tr><th>Fonte de mercado</th><td><a href="https://www.binance.com/en/trade/${encodeURIComponent(info.baseAsset)}_${encodeURIComponent(info.quoteAsset)}?type=spot" target="_blank" rel="noopener">Abrir par na Binance ↗</a></td></tr></tbody></table>`;
+  $('results').classList.remove('hidden');$('status').textContent='Análise de mercado concluída. Confira a identidade do ativo e as fontes fundamentais antes de decidir.';
+ }catch(e){$('error').textContent='Não foi possível concluir a busca: '+e.message+'\\nVerifique sua conexão e tente novamente. Algumas redes ou navegadores podem bloquear a API.';$('status').textContent='';}
+ finally{$('go').disabled=false}
+}
+$('go').addEventListener('click',analyze);
+$('asset').addEventListener('keydown',e=>{if(e.key==='Enter')analyze()});
+</script></body></html>
