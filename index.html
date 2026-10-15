@@ -1,141 +1,136 @@
 <!doctype html>
-<html lang="pt-BR">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Analisador Cripto — Triagem automática</title>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#102a43"><title>Analisador Cripto — painel integrado</title>
 <style>
-:root{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#172033;background:#f4f7fb}
-body{margin:0;padding:14px}.wrap{max-width:1000px;margin:auto}.hero{background:#102a43;color:#fff;padding:20px;border-radius:16px}
-h1{font-size:1.45rem;margin:0 0 8px}h2{font-size:1.15rem;margin:0 0 12px}.muted{color:#62748a}.hero .muted{color:#d5e3f0}
-.panel{background:#fff;border:1px solid #d9e2ec;border-radius:14px;padding:15px;margin:13px 0}
-.row{display:flex;gap:10px;flex-wrap:wrap}.field{flex:1;min-width:145px}label{display:block;font-weight:650;margin-bottom:6px}
-input,select,button{font:inherit;padding:11px;border:1px solid #bcccdc;border-radius:9px;width:100%;box-sizing:border-box}button{background:#1261a0;color:#fff;border:0;font-weight:700;cursor:pointer}button:disabled{opacity:.6}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:9px}.card{border:1px solid #d9e2ec;border-radius:12px;padding:12px;background:#fff}.k{color:#62748a;font-size:.84rem}.v{font-size:1.15rem;font-weight:750;margin-top:5px;overflow-wrap:anywhere}
-.good{color:#137547}.bad{color:#b42318}.warn{color:#8a5b00}.small{font-size:.9rem}.notice{background:#fff8e1;border:1px solid #f4d06f;padding:11px;border-radius:10px}
-table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:8px;border-bottom:1px solid #e3eaf2;vertical-align:top}th{background:#f0f5fa}a{color:#075da8}.pill{display:inline-block;padding:5px 8px;border-radius:99px;background:#e8f2fb;margin:3px;font-size:.85rem}.hidden{display:none}#error{color:#b42318;white-space:pre-wrap}
-</style></head><body><div class="wrap">
-<div class="hero"><h1>Analisador Cripto — versão 3</h1><div class="muted">Triagem automática com dados públicos: Binance, DexScreener, DefiLlama e GoPlus quando houver correspondência disponível.</div></div>
-<div class="panel">
-<div class="row"><div class="field"><label for="asset">Ativo / ticker / par</label><input id="asset" value="BTC" placeholder="BTC, AVA, ETHUSDT"></div><div class="field"><label for="quote">Cotação Binance</label><select id="quote"><option>USDT</option><option>BTC</option><option>USDC</option><option>FDUSD</option><option>BNB</option><option>EUR</option></select></div><div class="field" style="align-self:end"><button id="go">Buscar e analisar</button></div></div>
-<div class="small muted">Para tokens com ticker ambíguo, confira contrato, rede e par antes de confiar no resultado.</div><div id="status" class="small" aria-live="polite"></div><div id="error"></div></div>
-<div id="results" class="hidden">
-<div class="panel"><h2 id="heading">Resultado</h2><div id="updated" class="muted small"></div><div id="metrics" class="cards"></div></div>
-<div class="panel"><h2>Resumo executivo</h2><div id="summary"></div></div>
-<div class="panel"><h2>Indicadores de mercado</h2><div id="technical"></div></div>
-<div class="panel"><h2>Fundamentos e segurança — triagem automática</h2><div id="fundamentals"></div><div class="notice small">A ausência de alerta não prova legitimidade. Símbolos podem ser falsificados; contrato e rede precisam corresponder ao projeto oficial. APIs públicas podem omitir dados ou sofrer atraso.</div></div>
-<div class="panel"><h2>Três cenários de preço</h2><div id="scenarios"></div><p class="small muted">Cenários ilustrativos, não previsões nem probabilidades estatísticas. Os percentuais são hipóteses de estresse derivadas da volatilidade recente e de limites configuráveis, não “chance real” garantida. Use também cenários de queda.</p></div>
-<div class="panel"><h2>Links para conferência independente</h2><div id="links"></div></div>
-<div class="panel"><h2>Fontes e cobertura dos dados</h2><div id="sources"></div></div>
+:root{--navy:#102a43;--blue:#1769aa;--bg:#f2f6fa;--line:#d9e2ec;--muted:#627d98;--green:#18794e;--red:#b42318;--amber:#8a5b00}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#172b4d;font:16px/1.48 system-ui,-apple-system,Segoe UI,Roboto,Arial}.wrap{max-width:1120px;margin:auto;padding:14px}.hero{background:linear-gradient(135deg,#102a43,#1769aa);color:white;padding:22px;border-radius:18px}.hero h1{margin:0 0 8px;font-size:1.6rem}.hero p{margin:0;color:#e6f1fb}.panel{background:white;border:1px solid var(--line);border-radius:15px;padding:16px;margin:14px 0;box-shadow:0 2px 7px #102a4309}.row{display:flex;gap:12px;flex-wrap:wrap}.field{flex:1;min-width:145px}label{display:block;font-weight:700;margin:0 0 5px}input,select,button{width:100%;padding:11px;border:1px solid #bcccdc;border-radius:9px;font:inherit;background:white;color:#172b4d}button{background:var(--blue);color:white;border:0;font-weight:750;cursor:pointer}button:disabled{opacity:.55}h2{font-size:1.15rem;margin:0 0 12px}h3{font-size:1rem;margin:15px 0 7px}.muted,.small{color:var(--muted)}.small{font-size:.88rem}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:9px}.card{border:1px solid var(--line);border-radius:11px;padding:12px;min-width:0}.k{font-size:.83rem;color:var(--muted)}.v{font-weight:800;font-size:1.12rem;overflow-wrap:anywhere;margin-top:3px}.notice{background:#fff7df;border:1px solid #f0d98a;padding:12px;border-radius:10px}.good{color:var(--green)}.bad{color:var(--red)}.warn{color:var(--amber)}.pill{display:inline-block;background:#eaf3fb;color:#075da8;padding:7px 10px;border-radius:22px;text-decoration:none;margin:4px 5px 4px 0;font-size:.9rem}.status{padding:9px 0;font-weight:650}table{width:100%;border-collapse:collapse;font-size:.94rem}td,th{text-align:left;padding:9px 7px;border-bottom:1px solid #e6edf3;vertical-align:top;overflow-wrap:anywhere}th{background:#f3f7fb}.tablewrap{overflow-x:auto}.score{font-size:1.8rem;font-weight:850}.bar{height:9px;background:#e5edf5;border-radius:10px;overflow:hidden;margin-top:7px}.bar span{display:block;height:100%;background:#1769aa}.sectionnote{margin:9px 0}.footer{font-size:.85rem;color:var(--muted);padding:8px 2px 25px}.hidden{display:none}.checkrow{display:flex;gap:8px;align-items:flex-start}.checkrow input{width:auto;margin-top:5px}.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+</style></head><body><main class="wrap">
+<header class="hero"><h1>Analisador Cripto — painel integrado</h1><p>Mercado, indicadores, liquidez, triagem de contrato, fundamentos, pesquisa e cenários de risco.</p><p class="small" style="color:#e6f1fb;margin-top:8px">Versão gratuita de navegador. Não executa ordens, não pede senha de corretora e não promete valorização.</p></header>
+
+<section class="panel"><h2>1. Ativo e mercado</h2><div class="row">
+<div class="field"><label for="asset">Ticker / símbolo</label><input id="asset" value="BTC" placeholder="BTC, ETH, SOL"></div>
+<div class="field"><label for="quote">Cotação na Binance</label><select id="quote"><option>USDT</option><option>USDC</option><option>BTC</option><option>FDUSD</option><option>BNB</option><option>EUR</option><option>BRL</option></select></div>
+<div class="field"><label for="horizon">Horizonte de análise</label><select id="horizon"><option value="all">Todos: 30 / 180 / 365 dias</option><option value="30">30 dias</option><option value="180">180 dias</option><option value="365">365 dias</option></select></div>
+<div class="field" style="align-self:end"><button id="go">Analisar ativo</button></div></div>
+<p class="small">Ticker não é identidade única. Para verificação de contrato, preencha também a rede e o endereço abaixo. A consulta usa APIs públicas quando acessíveis; limites, CORS ou mudanças nas APIs podem impedir resultados.</p><div id="status" class="status" aria-live="polite">Pronto para consultar.</div><div id="err" class="bad"></div></section>
+
+<section class="panel"><h2>2. Verificação de contrato (opcional, recomendada para tokens on-chain)</h2>
+<div class="row"><div class="field"><label for="chain">Rede / chain ID</label><select id="chain"><option value="">Selecione a rede</option><option value="1">Ethereum (1)</option><option value="56">BNB Smart Chain (56)</option><option value="137">Polygon (137)</option><option value="42161">Arbitrum (42161)</option><option value="10">Optimism (10)</option><option value="8453">Base (8453)</option><option value="43114">Avalanche C-Chain (43114)</option><option value="250">Fantom (250)</option><option value="solana">Solana</option></select></div>
+<div class="field" style="flex:2"><label for="contract">Endereço do contrato / mint address</label><input id="contract" placeholder="Cole o endereço oficial do contrato"></div>
+<div class="field" style="align-self:end"><button id="security">Consultar segurança</button></div></div>
+<div id="securityResult" class="sectionnote small">Ainda não consultado. Confira o contrato no site oficial do projeto antes de usar esta ferramenta.</div>
+<p class="small">A API de segurança pode exigir credencial ou limitar acesso direto do navegador. Se falhar, isso significa “não verificado”, nunca “seguro”. Não cole chaves privadas, seed phrases ou senhas.</p></section>
+
+<div id="out" class="hidden">
+<section class="panel"><h2>3. Resumo de mercado</h2><div id="cards" class="cards"></div><div id="summary"></div></section>
+<section class="panel"><h2>4. Indicadores técnicos</h2><div id="tech"></div><div id="trendCards" class="cards"></div></section>
+<section class="panel"><h2>5. Liquidez e presença on-chain</h2><div id="liquidity"></div></section>
+<section class="panel"><h2>6. Score de triagem — não é recomendação de compra</h2><div id="score"></div></section>
+<section class="panel"><h2>7. Cenários hipotéticos: 30, 180 e 365 dias</h2><div id="scenarios"></div><p class="notice small">Os cenários são faixas de estresse calculadas com volatilidade histórica aproximada. Não são previsão, preço-alvo ou probabilidade calibrada. Em cripto, perdas extremas e perda total são possíveis.</p></section>
+<section class="panel"><h2>8. Notícias, tokenomics, desbloqueios e auditorias</h2><p>Os links abaixo abrem pesquisas específicas. Esta versão não afirma ter lido ou validado automaticamente as páginas abertas. Dê preferência a documentos oficiais e verifique datas, rede, contrato e autoria.</p><div id="research"></div></section>
+<section class="panel"><h2>9. Cobertura e qualidade dos dados desta consulta</h2><div id="sources"></div></section>
 </div>
-<div class="panel small muted"><b>Limites importantes:</b> não existe algoritmo público que consiga provar que um ativo vai valorizar. Este relatório combina sinais observáveis; não é auditoria legal, auditoria de smart contract nem aconselhamento financeiro. Não pede chaves privadas e não executa ordens.</div>
-</div>
+
+<section class="panel"><h2>10. Como interpretar o resultado</h2><div class="grid2"><div><b>Dados de mercado</b><p class="small">Preço, candles, volume e livro de ofertas refletem o par específico da Binance Spot. Não representam todas as corretoras nem o mercado inteiro.</p></div><div><b>Segurança do token</b><p class="small">Alertas automatizados são pistas. Contratos proxy, permissões administrativas, impostos de compra/venda e liquidez podem exigir análise técnica independente.</p></div><div><b>Fundamentos e tokenomics</b><p class="small">Confira oferta circulante/total/máxima, concentração de carteiras, emissões, vesting, desbloqueios, utilidade, receita, governança e dependência da equipe.</p></div><div><b>Risco e estratégia</b><p class="small">Não use score como ordem de compra. Defina tamanho da posição, limite de perda, liquidez de saída e risco de concentração. Compare o desempenho com BTC.</p></div></div></section>
+<section class="panel"><h2>11. Fontes públicas utilizadas e pesquisa</h2>
+<ul><li><a href="https://github.com/binance/binance-spot-api-docs" target="_blank" rel="noopener">Documentação oficial Binance Spot API</a> — endpoints públicos de mercado.</li><li><a href="https://docs.gopluslabs.io/" target="_blank" rel="noopener">Documentação GoPlus Security</a> — verificação de risco de contrato quando acessível.</li><li><a href="https://docs.dexscreener.com/" target="_blank" rel="noopener">DexScreener API docs</a> — pares e liquidez DEX.</li><li><a href="https://defillama.com/docs/api" target="_blank" rel="noopener">DefiLlama API docs</a> — dados de protocolos/TVL.</li><li><a href="https://www.coingecko.com/" target="_blank" rel="noopener">CoinGecko</a> e <a href="https://coinmarketcap.com/" target="_blank" rel="noopener">CoinMarketCap</a> — apoio à confirmação de identidade e métricas.</li></ul>
+<p class="small">APIs e planos gratuitos podem mudar, impor limites ou bloquear chamadas originadas do navegador. GitHub Pages é hospedagem estática: não é um servidor secreto nem um mecanismo automático de monitoramento 24/7.</p></section>
+<div class="footer">Ferramenta educacional de pesquisa. Dados podem estar atrasados, incompletos ou ambíguos. Não constitui aconselhamento financeiro.</div>
+</main>
 <script>
 const $=id=>document.getElementById(id);
 const fmt=(n,d=4)=>Number.isFinite(n)?n.toLocaleString('pt-BR',{maximumFractionDigits:d}):'—';
 const pct=n=>Number.isFinite(n)?(n>0?'+':'')+n.toFixed(2)+'%':'—';
-const money=n=>Number.isFinite(n)?'$'+n.toLocaleString('en-US',{maximumFractionDigits:8}):'—';
+const usd=n=>Number.isFinite(n)?n.toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:8}):'—';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function metric(label,value,sub=''){return `<div class="card"><div class="k">${label}</div><div class="v">${value}</div>${sub?`<div class="k">${sub}</div>`:''}</div>`}
-function link(label,url){return `<a class="pill" href="${url}" target="_blank" rel="noopener">${label} ↗</a>`}
-async function getJson(url){const r=await fetch(url);if(!r.ok)throw new Error('HTTP '+r.status+' em '+url);return r.json()}
-function change(a,b){return a>0?((b/a)-1)*100:NaN}
-function avg(a){return a.length?a.reduce((x,y)=>x+y,0)/a.length:NaN}
-function sma(a,n){return a.length>=n?avg(a.slice(-n)):NaN}
-function rsi(a,n=14){if(a.length<n+1)return NaN;let g=0,l=0;for(let i=a.length-n;i<a.length;i++){let d=a[i]-a[i-1];if(d>0)g+=d;else l-=d}return l===0?100:100-100/(1+g/l)}
-function stddev(a){if(a.length<2)return NaN;let m=avg(a);return Math.sqrt(avg(a.map(x=>(x-m)**2)))}
-const chainIds={'ethereum':'1','bsc':'56','arbitrum':'42161','polygon':'137','avalanche':'43114','optimism':'10','base':'8453','fantom':'250','linea':'59144','zksync':'324','scroll':'534352','solana':'solana'};
-async function analyze(){
- $('go').disabled=true;$('error').textContent='';$('status').textContent='Buscando mercado e fontes independentes…';$('results').classList.add('hidden');
+async function get(url,timeout=12000){const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),timeout);try{const r=await fetch(url,{signal:ctrl.signal});if(!r.ok)throw Error('HTTP '+r.status);return await r.json()}finally{clearTimeout(timer)}}
+const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:NaN;
+function sd(a){if(a.length<2)return NaN;const m=avg(a);return Math.sqrt(a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1))}
+function rsi(c,n=14){if(c.length<n+1)return NaN;let gains=0,losses=0;for(let i=c.length-n;i<c.length;i++){const d=c[i]-c[i-1];if(d>0)gains+=d;else losses-=d}return losses===0?100:100-100/(1+(gains/n)/(losses/n))}
+function card(k,v,s=''){return `<div class="card"><div class="k">${k}</div><div class="v">${v}</div>${s?`<div class="k">${s}</div>`:''}</div>`}
+function link(label,url){return `<a class="pill" target="_blank" rel="noopener noreferrer" href="${url}">${label} ↗</a>`}
+let marketData=null, extraData={};
+async function run(){
+ $('go').disabled=true;$('status').textContent='Consultando dados públicos…';$('err').textContent='';$('out').classList.add('hidden');
+ const raw=$('asset').value.trim().toUpperCase(),quote=$('quote').value;
  try{
-  const raw=$('asset').value.trim().toUpperCase().replace(/\s/g,'');if(!raw)throw Error('Digite um ticker.');
-  const quote=$('quote').value, base='https://data-api.binance.vision';
-  let symbol=raw.includes('/')?raw.replace('/',''):raw.endsWith(quote)?raw:raw+quote;
-  const ex=await getJson(base+'/api/v3/exchangeInfo');
-  let info=ex.symbols.find(s=>s.symbol===symbol&&s.status==='TRADING');
-  if(!info&&!raw.includes('/')&&!raw.endsWith(quote)){const ms=ex.symbols.filter(s=>s.baseAsset===raw&&s.status==='TRADING');info=ms.find(s=>s.quoteAsset===quote)||ms[0];if(info)symbol=info.symbol}
-  let market=null,ticker=null,klines=null,depth=null,marketErr='';
-  if(info){
-   [ticker,klines,depth]=await Promise.all([
-    getJson(base+'/api/v3/ticker/24hr?symbol='+symbol),
-    getJson(base+'/api/v3/klines?symbol='+symbol+'&interval=1d&limit=90'),
-    getJson(base+'/api/v3/depth?symbol='+symbol+'&limit=20')
-   ]);
-   const closes=klines.map(k=>+k[4]),rets=[];for(let i=1;i<closes.length;i++)rets.push(closes[i]/closes[i-1]-1);
-   const p=+ticker.lastPrice, ch24=+ticker.priceChangePercent,ch7=change(closes.at(-8),closes.at(-1)),ch30=change(closes[Math.max(0,closes.length-31)],closes.at(-1)),ch90=change(closes[0],closes.at(-1));
-   const ma7=sma(closes,7),ma20=sma(closes,20),rv=stddev(rets.slice(-30))*Math.sqrt(365)*100;
-   const bid=+depth.bids?.[0]?.[0],ask=+depth.asks?.[0]?.[0],spread=bid>0&&ask>0?(ask-bid)/((ask+bid)/2)*100:NaN;
-   market={symbol,base:info.baseAsset,quote:info.quoteAsset,status:info.status,p,ch24,ch7,ch30,ch90,ma7,ma20,rsi:rsi(closes),rv,spread,vol:+ticker.quoteVolume,trades:+ticker.count,closes,low:+ticker.lowPrice,high:+ticker.highPrice,bid,ask,trend:p>ma7&&ma7>ma20?'Alta':p<ma7&&ma7<ma20?'Baixa':'Mista'};
-  }else{marketErr='Par não encontrado na Binance Spot; os dados de mercado da Binance não estarão disponíveis. A pesquisa de tokens seguirá pelo ticker.'}
-  // DexScreener search gives candidate contract/pair, not proof of official identity.
-  let dex=null,dexErr='';
-  try{const d=await getJson('https://api.dexscreener.com/latest/dex/search?q='+encodeURIComponent(raw));const pairs=(d.pairs||[]).filter(x=>x.baseToken?.symbol?.toUpperCase()===raw||x.baseToken?.name?.toUpperCase()===raw);pairs.sort((a,b)=>(+(b.liquidity?.usd||0))-(+(a.liquidity?.usd||0)));dex=pairs[0]||null;if(!dex)dexErr='Nenhum par correspondente encontrado na busca pública DexScreener.'}catch(e){dexErr='DexScreener indisponível nesta sessão: '+e.message}
-  // DefiLlama protocol data is useful only when a defensible symbol match exists; ticker collisions are common.
-  let llama=null,llamaErr='';
-  try{const ps=await getJson('https://api.llama.fi/protocols');const hits=ps.filter(x=>(x.symbol||'').toUpperCase()===raw);hits.sort((a,b)=>(b.tvl||0)-(a.tvl||0));llama=hits[0]||null;if(!llama)llamaErr='Não foi encontrado protocolo com símbolo idêntico na lista DefiLlama.'}catch(e){llamaErr='DefiLlama indisponível: '+e.message}
-  let security=null,secErr='';
-  if(dex?.chainId&&dex?.baseToken?.address){
-   try{
-    let chains=[];try{const c=await getJson('https://api.gopluslabs.io/api/v1/supported_chains');chains=c.result||[]}catch{}
-    const chain=chains.find(c=>String(c.name).toLowerCase()===String(dex.chainId).toLowerCase()||String(c.id)===String(chainIds[String(dex.chainId).toLowerCase()]||''));
-    if(chain){const ss=await getJson('https://api.gopluslabs.io/api/v1/token_security/'+encodeURIComponent(chain.id)+'?contract_addresses='+encodeURIComponent(dex.baseToken.address.toLowerCase()));security=ss.result?.[dex.baseToken.address.toLowerCase()]||Object.values(ss.result||{})[0]||null;if(!security)secErr='GoPlus não retornou resultado para o contrato encontrado.'}
-    else secErr='Rede do par não pôde ser associada com segurança à rede suportada pelo GoPlus.';
-   }catch(e){secErr='Consulta GoPlus falhou: '+e.message}
-  }else secErr='Sem contrato/rede identificado pela busca DexScreener; análise de contrato não executada.';
-  $('heading').textContent=market?`${market.base}/${market.quote} — ${market.base}`:`Pesquisa de ativo: ${raw}`;
-  $('updated').textContent='Consultado em '+new Date().toLocaleString('pt-BR')+'. As fontes podem ter limites, falhas ou dados incompletos.';
-  $('metrics').innerHTML=market?[
-   metric('Preço',money(market.p)),metric('Variação 24h',pct(market.ch24)),metric('Variação 7d',pct(market.ch7)),metric('Variação ~30d',pct(market.ch30)),metric('Variação ~90d',pct(market.ch90)),metric('Volume 24h',money(market.vol)),metric('Spread',pct(market.spread)),metric('Volatilidade anualizada aprox.',pct(market.rv))
-  ].join(''):`<div class="notice">Sem dados Binance para o par informado. Confira o ticker ou tente uma cotação disponível.</div>`;
-  let score=0,max=0,parts=[];
-  function part(name,pts,mx,detail){score+=pts;max+=mx;parts.push(`<tr><td>${name}</td><td>${pts}/${mx}</td><td>${detail}</td></tr>`)}
-  if(market){
-   part('Tendência (preço e médias)',market.trend==='Alta'?12:market.trend==='Mista'?7:2,15,market.trend);
-   part('Desempenho 7/30 dias',market.ch7>0&&market.ch30>0?10:(market.ch7>0||market.ch30>0)?6:2,10,`7d ${pct(market.ch7)}; 30d ${pct(market.ch30)}`);
-   part('Volume 24h',market.vol>=1e7?13:market.vol>=1e6?10:market.vol>=1e5?6:2,15,money(market.vol));
-   part('Spread',Number.isFinite(market.spread)?(market.spread<=.15?9:market.spread<=.5?6:market.spread<=1?3:1):0,10,pct(market.spread));
-   part('Volatilidade',market.rv<50?8:market.rv<100?5:2,10,pct(market.rv));
-  }
-  const fundamentals=[];
-  if(dex){
-   fundamentals.push(['DexScreener','Par localizado',`Liquidez aproximada ${money(+(dex.liquidity?.usd||NaN))}; volume 24h ${money(+(dex.volume?.h24||NaN))}; rede ${esc(dex.chainId)}; endereço ${esc(dex.baseToken?.address||'—')}. Isso não confirma identidade oficial.`]);
-  }else fundamentals.push(['DexScreener','Não confirmado',dexErr||'Sem par correspondente.']);
-  if(llama)fundamentals.push(['DefiLlama','Correspondência por símbolo — confiança limitada',`Protocolo ${esc(llama.name)}; TVL aproximado ${money(+(llama.tvl||NaN))}; categoria ${esc(llama.category||'—')}; mudança TVL 7d ${pct(+(llama.change_7d))}. Um símbolo igual não prova que é o mesmo ativo.`]);
-  else fundamentals.push(['DefiLlama','Sem correspondência',llamaErr||'Sem correspondência.']);
-  let risks=[];
-  if(security){
-   const fields=[['Código aberto',security.is_open_source],['Proxy',security.is_proxy],['Pode haver honeypot',security.is_honeypot],['Imposto de compra',security.buy_tax],['Imposto de venda',security.sell_tax],['Proprietário pode alterar taxas',security.owner_change_balance],['Liquidez bloqueada',security.is_in_dex]];
-   fundamentals.push(['GoPlus','Resposta de segurança encontrada',fields.map(([k,v])=>`${k}: ${v===undefined?'sem dado':v}`).join('; ')]);
-   if(security.is_honeypot==='1')risks.push('GoPlus sinaliza possível honeypot.');
-   if(security.is_open_source==='0')risks.push('Código não identificado como aberto pelo GoPlus.');
-   if(security.owner_change_balance==='1')risks.push('O proprietário pode alterar saldos segundo o campo retornado.');
-   if(Number(security.sell_tax)>0.1)risks.push('Imposto de venda elevado segundo o dado retornado.');
-  }else fundamentals.push(['GoPlus','Não verificado',secErr]);
-  if(market&&market.vol<100000)risks.push('Volume de cotação abaixo de US$ 100 mil/dia no par escolhido: possível baixa liquidez.');
-  if(market&&Number.isFinite(market.spread)&&market.spread>1)risks.push('Spread acima de 1% no melhor bid/ask observado.');
-  if(!dex)risks.push('Contrato e rede não foram verificados automaticamente.');
-  const marketRating=market?(score>=40?'Sinais de mercado relativamente favoráveis':score>=28?'Sinais mistos':'Sinais de mercado frágeis'):'Dados de mercado indisponíveis';
-  let conclusion=risks.length?`Cautela elevada: ${risks.join(' ')}`:'Não foi detectado alerta automático nas verificações executadas, mas isso não comprova segurança nem potencial de valorização.';
-  $('summary').innerHTML=`<div class="cards">${metric('Pontuação de mercado',market?`${score}/60`:'Não calculada')}${metric('Leitura de mercado',marketRating)}${metric('Alertas automáticos',risks.length?`<span class="bad">${risks.length}</span>`:'Nenhum detectado')}</div><p><b>Conclusão responsável:</b> ${esc(conclusion)}</p><p class="small">Esta ferramenta não consegue dizer com certeza se o ativo “tem chance real” de valorizar. Ela mede sinais, mostra cobertura e deixa explícitas as incertezas. A nota de mercado não inclui fundamentos e não é uma probabilidade de retorno.</p>`;
-  $('technical').innerHTML=market?`<table><tbody><tr><th>Tendência vs. médias móveis</th><td>${market.trend}</td></tr><tr><th>Média 7d</th><td>${money(market.ma7)}</td></tr><tr><th>Média 20d</th><td>${money(market.ma20)}</td></tr><tr><th>RSI 14 aproximado</th><td>${fmt(market.rsi,1)} ${market.rsi>=70?'(zona alta)':market.rsi<=30?'(zona baixa)':'(intermediário)'}</td></tr><tr><th>Máxima/mínima 24h</th><td>${money(market.high)} / ${money(market.low)}</td></tr><tr><th>Negociações 24h</th><td>${fmt(market.trades,0)}</td></tr><tr><th>Volatilidade anualizada aproximada</th><td>${pct(market.rv)}</td></tr></tbody></table>`:'Sem indicadores Binance.';
-  $('fundamentals').innerHTML=`<table><thead><tr><th>Fonte</th><th>Status</th><th>Dados</th></tr></thead><tbody>${fundamentals.map(x=>`<tr><td>${x[0]}</td><td>${x[1]}</td><td>${x[2]}</td></tr>`).join('')}</tbody></table><p class="small">Pontuação técnica disponível: ${market?score+'/60':'não calculada'}. Não somamos uma nota fundamental automática quando a correspondência de identidade é ambígua. Nenhuma fonte isolada valida um projeto.</p>`;
-  // Illustrative scenarios: horizon assumptions widen with realized volatility; never presented as predictions.
-  if(market){
-   const daily=Number.isFinite(market.rv)?market.rv/Math.sqrt(365)/100:0.04;
-   const horizons=[['Curto prazo (30 dias)',Math.sqrt(30)],['Médio prazo (180 dias)',Math.sqrt(180)],['Longo prazo (365 dias)',Math.sqrt(365)]];
-   let html='';
-   for(const [h,scale] of horizons){
-    const swing=Math.min(0.85,Math.max(0.12,daily*scale*1.5));
-    const bear=market.p*(1-swing),base=market.p*(1+swing*0.15),bull=market.p*(1+swing);
-    html+=`<h3>${h}</h3><table><thead><tr><th>Cenário</th><th>Preço hipotético</th><th>Variação</th><th>Leitura</th></tr></thead><tbody><tr><td class="bad">Adverso</td><td>${money(bear)}</td><td>${pct(-swing*100)}</td><td>Queda/stress</td></tr><tr><td>Neutro</td><td>${money(base)}</td><td>${pct(swing*15)}</td><td>Pequena alta hipotética</td></tr><tr><td class="good">Favorável</td><td>${money(bull)}</td><td>${pct(swing*100)}</td><td>Alta de stress, não previsão</td></tr></tbody></table>`;
-   }
-   $('scenarios').innerHTML=html+`<p class="small">A volatilidade anualizada observada foi ${pct(market.rv)}. A regra amplia as faixas conforme a volatilidade; ela não estima a probabilidade de cada cenário nem incorpora notícias, token unlocks, macroeconomia ou risco de falha do projeto.</p>`;
-  }else $('scenarios').textContent='Sem preço Binance, não é possível calcular cenários numéricos.';
-  const q=encodeURIComponent(raw);
-  $('links').innerHTML=link('CoinGecko','https://www.coingecko.com/en/search?query='+q)+link('CoinMarketCap','https://coinmarketcap.com/search/?q='+q)+link('DexScreener','https://dexscreener.com/search?q='+q)+link('DefiLlama','https://defillama.com/search?search='+q)+link('Token unlocks','https://www.google.com/search?q='+q+'+token+unlock+vesting')+link('Auditorias','https://www.google.com/search?q='+q+'+smart+contract+audit')+link('Documentação oficial','https://www.google.com/search?q='+q+'+official+tokenomics');
-  $('sources').innerHTML=`<ul><li>Binance Spot API: preço, candles, volume, bid/ask e negociações.</li><li>DexScreener: descoberta de pares, rede, contrato e liquidez/volume DEX, quando disponível.</li><li>DefiLlama: TVL/categoria de protocolo apenas se houver correspondência por símbolo; ticker pode colidir.</li><li>GoPlus: campos de risco de contrato quando rede e endereço são encontrados e a API responde.</li></ul><p class="small">Consulta ${new Date().toLocaleString('pt-BR')}. Falhas e dados ausentes são exibidos como não verificados, não como “aprovado”.</p>`;
-  $('results').classList.remove('hidden');$('status').textContent='Triagem concluída. Leia os alertas, a cobertura e as limitações antes de tomar qualquer decisão.';
- }catch(e){$('error').textContent='Não foi possível concluir: '+e.message+'. Verifique a conexão e tente novamente.';$('status').textContent=''}
+ if(!raw)throw Error('Digite um ticker.');
+ const ex=await get('https://data-api.binance.vision/api/v3/exchangeInfo');
+ let symbol=raw.includes('/')?raw.replace('/',''):raw.endsWith(quote)?raw:raw+quote;
+ let info=ex.symbols.find(s=>s.symbol===symbol&&s.status==='TRADING');
+ if(!info){info=ex.symbols.find(s=>s.baseAsset===raw&&s.quoteAsset===quote&&s.status==='TRADING');if(info)symbol=info.symbol}
+ let m=null,binanceError='';
+ if(info){
+  const [t,ks,dep]=await Promise.all([
+   get('https://data-api.binance.vision/api/v3/ticker/24hr?symbol='+encodeURIComponent(symbol)),
+   get('https://data-api.binance.vision/api/v3/klines?symbol='+encodeURIComponent(symbol)+'&interval=1d&limit=200'),
+   get('https://data-api.binance.vision/api/v3/depth?symbol='+encodeURIComponent(symbol)+'&limit=100')
+  ]);
+  const c=ks.map(k=>+k[4]),rets=[];for(let i=1;i<c.length;i++)rets.push(c[i]/c[i-1]-1);
+  const p=+t.lastPrice,bid=+(dep.bids[0]?.[0]),ask=+(dep.asks[0]?.[0]),spread=bid>0&&ask>0?(ask-bid)/((ask+bid)/2)*100:NaN;
+  const bidDepth=dep.bids.reduce((s,x)=>s+(+x[0])*(+x[1]),0),askDepth=dep.asks.reduce((s,x)=>s+(+x[0])*(+x[1]),0);
+  m={symbol,base:info.baseAsset,quote:info.quoteAsset,p,ch24:+t.priceChangePercent,ch7:c.length>7?(p/c[c.length-8]-1)*100:NaN,ch30:c.length>30?(p/c[c.length-31]-1)*100:NaN,ch90:c.length>90?(p/c[c.length-91]-1)*100:NaN,ch180:c.length>180?(p/c[0]-1)*100:NaN,ma7:avg(c.slice(-7)),ma20:avg(c.slice(-20)),ma50:avg(c.slice(-50)),rsi:rsi(c),rv:sd(rets.slice(-30))*Math.sqrt(365)*100,spread,vol:+t.quoteVolume,low:+t.lowPrice,high:+t.highPrice,closes:c,bidDepth,askDepth,depthImbalance:(bidDepth+askDepth)>0?(bidDepth-askDepth)/(bidDepth+askDepth)*100:NaN,returns:rets};
+ }else binanceError='Não foi encontrado par Spot ativo para '+esc(symbol)+'.';
+ marketData=m;
+ $('cards').innerHTML=m?[card('Preço ('+m.quote+')',fmt(m.p,8)),card('Variação 24h',pct(m.ch24)),card('7 dias',pct(m.ch7)),card('30 dias',pct(m.ch30)),card('90 dias',pct(m.ch90)),card('Volume 24h ('+m.quote+')',fmt(m.vol,2)),card('Spread no topo',pct(m.spread)),card('Volatilidade anualizada aprox.',pct(m.rv))]:`<div class="notice">${binanceError}</div>`;
+ $('summary').innerHTML=m?`<p><b>Par consultado:</b> ${esc(m.symbol)}. <b>Tendência simples:</b> ${m.p>m.ma7&&m.ma7>m.ma20?'preço acima das médias de 7 e 20 dias':m.p<m.ma7&&m.ma7<m.ma20?'preço abaixo das médias de 7 e 20 dias':'sinais mistos entre preço e médias'}.</p><p class="small">Variações passadas não garantem continuidade. Preços expressos na moeda de cotação selecionada; métricas de profundidade e spread são fotografia do livro no momento da consulta.</p>`:'Sem dados de mercado Binance; não é possível calcular os indicadores baseados nesse par.';
+ $('tech').innerHTML=m?`<div class="tablewrap"><table><tr><th>Indicador</th><th>Valor</th><th>Leitura simples (não é sinal isolado)</th></tr><tr><td>SMA 7 dias</td><td>${fmt(m.ma7,8)} ${m.quote}</td><td>${m.p>m.ma7?'Preço acima':'Preço abaixo'} da média</td></tr><tr><td>SMA 20 dias</td><td>${fmt(m.ma20,8)} ${m.quote}</td><td>${m.p>m.ma20?'Preço acima':'Preço abaixo'} da média</td></tr><tr><td>SMA 50 dias</td><td>${fmt(m.ma50,8)} ${m.quote}</td><td>${m.p>m.ma50?'Preço acima':'Preço abaixo'} da média</td></tr><tr><td>RSI 14 (aproximação)</td><td>${fmt(m.rsi,1)}</td><td>${m.rsi>=70?'Zona tradicionalmente sobrecomprada':m.rsi<=30?'Zona tradicionalmente sobrevendida':'Faixa intermediária'}</td></tr><tr><td>Máxima / mínima 24h</td><td>${fmt(m.high,8)} / ${fmt(m.low,8)} ${m.quote}</td><td>Faixa observada no par</td></tr><tr><td>Retorno 180d (aprox.)</td><td>${pct(m.ch180)}</td><td>Disponível se há candles suficientes</td></tr><tr><td>Desequilíbrio de profundidade (top 100 níveis)</td><td>${pct(m.depthImbalance)}</td><td>Acima de zero há mais valor nominal em bids; pode mudar rapidamente</td></tr></table></div>`:'Indicadores não disponíveis.';
+ $('trendCards').innerHTML=m?[card('Preço vs SMA7',m.p>m.ma7?'Acima':'Abaixo'),card('Preço vs SMA20',m.p>m.ma20?'Acima':'Abaixo'),card('Preço vs SMA50',m.p>m.ma50?'Acima':'Abaixo'),card('RSI 14',fmt(m.rsi,1))].join(''):'';
+ let liquidity=[],issues=[];
+ try{
+  const d=await get('https://api.dexscreener.com/latest/dex/search?q='+encodeURIComponent(raw));
+  let pairs=(d.pairs||[]).filter(x=>(x.baseToken?.symbol||'').toUpperCase()===raw||(x.quoteToken?.symbol||'').toUpperCase()===raw);
+  const contract=$('contract').value.trim().toLowerCase();
+  if(contract)pairs=pairs.filter(x=>(x.baseToken?.address||'').toLowerCase()===contract||(x.quoteToken?.address||'').toLowerCase()===contract);
+  pairs.sort((a,b)=>(b.liquidity?.usd||0)-(a.liquidity?.usd||0));
+  extraData.pairs=pairs.slice(0,5);
+  if(pairs.length){liquidity.push(`<div class="tablewrap"><table><tr><th>Rede / par</th><th>Liquidez USD</th><th>Volume 24h USD</th><th>Preço USD</th><th>Contrato/token</th><th>Link</th></tr>${pairs.slice(0,5).map(x=>`<tr><td>${esc(x.chainId)} — ${esc(x.dexId||'DEX')}<br>${esc(x.baseToken?.symbol||'?')}/${esc(x.quoteToken?.symbol||'?')}</td><td>${usd(+(x.liquidity?.usd||NaN))}</td><td>${usd(+(x.volume?.h24||NaN))}</td><td>${usd(+(x.priceUsd||NaN))}</td><td>${esc(x.baseToken?.address||'—')}</td><td><a href="${esc(x.url||'#')}" target="_blank" rel="noopener">Abrir par</a></td></tr>`).join('')}</table></div><p class="small">Os pares são correspondências por ticker e/ou contrato. Sem confirmação oficial, não presuma que são o ativo certo.</p>`)}else liquidity.push('<p>Nenhum par correspondente foi retornado pela pesquisa DexScreener.</p>');
+ }catch(e){issues.push('DexScreener indisponível: '+e.message)}
+ try{
+  const protocols=await get('https://api.llama.fi/protocols');
+  const hits=protocols.filter(x=>(x.symbol||'').toUpperCase()===raw).sort((a,b)=>(b.tvl||0)-(a.tvl||0)).slice(0,5);
+  if(hits.length)liquidity.push('<h3>Possíveis protocolos DefiLlama (correspondência por símbolo)</h3><ul>'+hits.map(x=>`<li>${esc(x.name)} — TVL aproximado ${usd(+(x.tvl||NaN))}; <a target="_blank" rel="noopener" href="https://defillama.com/protocol/${encodeURIComponent(x.slug||'')}">ver protocolo</a></li>`).join('')+'</ul><p class="small">TVL é métrica do protocolo, não necessariamente valor de mercado do token. Ticker igual não confirma identidade.</p>');
+  else liquidity.push('<p>DefiLlama: não foi encontrado protocolo com símbolo idêntico.</p>');
+ }catch(e){issues.push('DefiLlama indisponível: '+e.message)}
+ $('liquidity').innerHTML=liquidity.join('')+`<p class="small">${issues.map(esc).join('<br>')}</p>`;
+ let techScore=50,why=[];
+ if(m){techScore=50+(m.p>m.ma7?8:-8)+(m.p>m.ma20?10:-10)+(m.ma7>m.ma20?8:-8)+(m.ch30>0?7:-7)+(m.rsi>=45&&m.rsi<=65?5:m.rsi>75?-8:m.rsi<25?-4:0);techScore=Math.max(0,Math.min(100,techScore));why.push(`Score técnico aproximado ${Math.round(techScore)}/100 baseado em médias, retorno de 30d e RSI.`)}
+ else why.push('Score técnico indisponível sem dados de mercado.');
+ let liqScore=50;const best=extraData.pairs?.[0];if(best){const l=+(best.liquidity?.usd||0),v=+(best.volume?.h24||0);liqScore=Math.min(100,Math.max(5,30+Math.min(40,Math.log10(Math.max(1,l))*5)+Math.min(30,Math.log10(Math.max(1,v))*4)));why.push('Liquidez DEX aproximada usada como sinal parcial; cobertura não é universal.')}
+ else why.push('Liquidez on-chain sem confirmação: score neutro provisório, não aprovação.');
+ const contractPresent=!!$('contract').value.trim();let secScore=contractPresent?50:35;
+ if(window.securityFindings&&window.securityFindings.length){secScore=Math.max(0,100-window.securityFindings.length*20);why.push('Triagem automática de contrato retornou indicadores que exigem interpretação.')}
+ else why.push(contractPresent?'Verificação de contrato não confirmada ou sem alertas interpretáveis.':'Sem contrato e rede, não há verificação de segurança.');
+ const overall=m?Math.round(techScore*.4+liqScore*.25+secScore*.35):null;
+ $('score').innerHTML=`<div class="cards">${card('Técnico',m?Math.round(techScore)+'/100':'N/D','40% do índice ilustrativo')}${card('Liquidez / presença DEX',Math.round(liqScore)+'/100','25% do índice ilustrativo')}${card('Segurança de contrato',Math.round(secScore)+'/100','35% do índice ilustrativo')}${card('Índice composto',overall===null?'N/D':overall+'/100','Não validado por backtesting')}</div><ul>${why.map(x=>'<li>'+esc(x)+'</li>').join('')}</ul><div class="notice small"><b>Limitação importante:</b> este score é experimental, não mede legitimidade comprovada nem prevê retorno. Se houver alerta de contrato, concentração extrema, liquidez insuficiente ou identidade duvidosa, não ignore o risco por causa de uma pontuação numérica.</div>`;
+ if(m){
+  const daily=(m.rv/100)/Math.sqrt(365), selected=$('horizon').value, horizons=[30,180,365].filter(d=>selected==='all'||String(d)===selected);
+  $('scenarios').innerHTML=horizons.map(days=>{const move=Math.min(.95,Math.max(.12,daily*Math.sqrt(days)*1.5));const neutral=m.p*(1+Math.min(.15,Math.max(-.1,(m.ch30||0)/100*.2)));return `<h3>${days} dias</h3><div class="tablewrap"><table><tr><th>Cenário</th><th>Preço hipotético (${m.quote})</th><th>Variação vs. preço atual</th></tr><tr><td class="bad">Adverso</td><td>${fmt(m.p*(1-move),8)}</td><td>${pct(-move*100)}</td></tr><tr><td>Neutro ilustrativo</td><td>${fmt(neutral,8)}</td><td>${pct((neutral/m.p-1)*100)}</td></tr><tr><td class="good">Favorável</td><td>${fmt(m.p*(1+move),8)}</td><td>${pct(move*100)}</td></tr></table></div>`}).join('')+`<p class="small">Volatilidade anualizada aproximada estimada com retornos diários recentes: ${pct(m.rv)}. A faixa é uma heurística e não inclui falência do projeto, manipulação, desbloqueios, mudanças regulatórias, slippage ou eventos extremos.</p>`;
+ }else $('scenarios').textContent='Sem preço/candles, cenários indisponíveis.';
+ const z=encodeURIComponent(raw);
+ $('research').innerHTML=link('Notícias recentes','https://news.google.com/search?q='+z+'%20crypto')+link('Anúncios oficiais','https://www.google.com/search?q='+z+'+official+announcements')+link('Tokenomics oficial','https://www.google.com/search?q='+z+'+official+tokenomics+circulating+supply')+link('Token unlock / vesting','https://www.google.com/search?q='+z+'+token+unlock+vesting+schedule')+link('Auditorias de contrato','https://www.google.com/search?q='+z+'+smart+contract+audit+official')+link('CoinGecko','https://www.coingecko.com/en/search?query='+z)+link('CoinMarketCap','https://coinmarketcap.com/search/?q='+z)+link('Anúncios Binance','https://www.binance.com/en/support/announcement');
+ $('sources').innerHTML=`<ul><li>Binance Spot: ${m?'dados de preço, candles, volume e livro obtidos':'par não localizado ou consulta falhou'}.</li><li>DexScreener: ${extraData.pairs?.length?'retornou possíveis pares':'nenhum par confirmado ou API indisponível'}.</li><li>DefiLlama: dados de protocolo quando a correspondência por símbolo existe; não prova identidade do token.</li><li>GoPlus: status exibido separadamente na seção de segurança do contrato.</li><li>Notícias, auditorias e tokenomics: links de pesquisa, não verificação automática nesta página.</li></ul><p>Consulta realizada em ${new Date().toLocaleString('pt-BR')}.</p>`;
+ $('out').classList.remove('hidden');$('status').textContent='Consulta concluída. Revise a qualidade e as limitações dos dados antes de decidir.';
+ }catch(e){$('err').textContent='Não foi possível concluir a consulta: '+e.message;$('status').textContent='Consulta parcial ou falhou. Tente novamente mais tarde.'}
  finally{$('go').disabled=false}
 }
-$('go').addEventListener('click',analyze);$('asset').addEventListener('keydown',e=>{if(e.key==='Enter')analyze()});
+window.securityFindings=[];
+$('security').addEventListener('click',async()=>{
+ const chain=$('chain').value,contract=$('contract').value.trim();$('security').disabled=true;$('securityResult').textContent='Consultando serviço de segurança…';window.securityFindings=[];
+ try{
+  if(!chain||!contract)throw Error('Informe rede e contrato. Para Solana, a API tem endpoint próprio e pode ter cobertura/limites diferentes.');
+  if(chain==='solana')throw Error('A integração automática de Solana não está habilitada nesta versão; use o explorador oficial e a documentação GoPlus.');
+  const url='https://api.gopluslabs.io/api/v1/token_security/'+encodeURIComponent(chain)+'?contract_addresses='+encodeURIComponent(contract.toLowerCase());
+  const data=await get(url);
+  if(String(data.code)!=='1')throw Error(data.message||'A API não confirmou a consulta.');
+  const entry=data.result?.[contract.toLowerCase()]||Object.values(data.result||{})[0];
+  if(!entry)throw Error('Nenhum resultado para este contrato/rede.');
+  const fields=[['Código aberto','is_open_source'],['Contrato proxy','is_proxy'],['Compra bloqueada','cannot_buy'],['Venda bloqueada','cannot_sell'],['Honeypot sinalizado','is_honeypot'],['Pode alterar imposto','slippage_modifiable'],['Imposto de compra','buy_tax'],['Imposto de venda','sell_tax'],['Proprietário renunciou','owner_address']];
+  const vals=fields.filter(([n,k])=>entry[k]!==undefined).map(([n,k])=>({n,v:String(entry[k])}));
+  window.securityFindings=vals.filter(x=>['1','true','yes'].includes(x.v.toLowerCase())&&/bloqueada|honeypot|alterar imposto/i.test(x.n));
+  $('securityResult').innerHTML='<b>Resposta GoPlus recebida.</b><div class="tablewrap"><table>'+vals.map(x=>`<tr><th>${esc(x.n)}</th><td>${esc(x.v)}</td></tr>`).join('')+'</table></div><p class="small">Interprete cada campo conforme a documentação da API e o tipo de token. Um resultado sem alertas não comprova segurança; dados podem estar ausentes ou desatualizados.</p>';
+ }catch(e){$('securityResult').innerHTML='<span class="warn"><b>Não foi possível verificar:</b> '+esc(e.message)+'</span><p class="small">A API pode exigir autorização, bloquear chamadas diretas ou não cobrir a rede. Resultado = não verificado, não seguro.</p>'}
+ finally{$('security').disabled=false}
+});
+$('go').addEventListener('click',run);$('asset').addEventListener('keydown',e=>{if(e.key==='Enter')run()});
 </script></body></html>
